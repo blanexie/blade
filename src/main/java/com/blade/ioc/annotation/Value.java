@@ -17,5 +17,12 @@ public @interface Value {
      * config for key
      * @return
      */
+    @Deprecated
     String name() default "";
+
+    /**
+     * 兼容name , 与name等效. 如果两个name和 value都有值,则取name的值
+     * @return
+     */
+    String value() default "";
 }

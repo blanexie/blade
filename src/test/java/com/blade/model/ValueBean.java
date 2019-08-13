@@ -18,7 +18,7 @@ public class ValueBean {
     @Value(name = "list")
     private List<String> list;
 
-    @Value(name = "app.version")
+    @Value( "app.version")
     private String appversion;
 
     @Value(name = "map")

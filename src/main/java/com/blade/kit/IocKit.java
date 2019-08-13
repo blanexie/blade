@@ -72,22 +72,37 @@ public class IocKit {
         List<ValueInjector> valueInjectors = new ArrayList<>(8);
         //handle class annotation
         if (null != classDefine.getType().getAnnotation(Value.class)) {
-            String suffix = classDefine.getType().getAnnotation(Value.class).name();
-            Arrays.stream(classDefine.getDeclaredFields()).forEach(field -> valueInjectors.add(
-                    new ValueInjector(environment, field, suffix + "." + field.getName())
-            ));
+            Value annotation = classDefine.getType().getAnnotation(Value.class);
+            if (StringKit.isNotBlank(annotation.name())) {
+                String suffix = annotation.name();
+                Arrays.stream(classDefine.getDeclaredFields()).forEach(field -> valueInjectors.add(
+                        new ValueInjector(environment, field, suffix + "." + field.getName())
+                ));
+            } else {
+                String suffix = annotation.value();
+                Arrays.stream(classDefine.getDeclaredFields()).forEach(field -> valueInjectors.add(
+                        new ValueInjector(environment, field, suffix + "." + field.getName())
+                ));
+            }
         } else {
             Arrays.stream(classDefine.getDeclaredFields()).
                     filter(field -> null != field.getAnnotation(Value.class)).
-                    map(field -> new ValueInjector(
-                            environment, field, field.getAnnotation(Value.class).name())
+                    map(field -> {
+                                Value annotation = field.getAnnotation(Value.class);
+                                String name = annotation.name();
+                                if (StringKit.isBlank(name)) {
+                                    name = annotation.value();
+                                }
+                                return new ValueInjector(environment, field, name);
+
+                            }
                     ).forEach(valueInjectors::add);
         }
         return valueInjectors;
     }
 
     public static void injection(Ioc ioc, BeanDefine beanDefine) {
-        ClassDefine         classDefine    = ClassDefine.create(beanDefine.getType());
+        ClassDefine classDefine = ClassDefine.create(beanDefine.getType());
         List<FieldInjector> fieldInjectors = getInjectFields(ioc, classDefine);
 
         Object bean = beanDefine.getBean();
@@ -101,7 +116,7 @@ public class IocKit {
     }
 
     public static void initInjection(Ioc ioc, BeanDefine beanDefine) {
-        ClassDefine         classDefine    = ClassDefine.create(beanDefine.getType());
+        ClassDefine classDefine = ClassDefine.create(beanDefine.getType());
         List<FieldInjector> fieldInjectors = getInjectFields(ioc, classDefine);
 
         Object bean = beanDefine.getBean();
@@ -120,7 +135,7 @@ public class IocKit {
     }
 
     public static void injectionValue(Environment environment, BeanDefine beanDefine) {
-        ClassDefine         classDefine = ClassDefine.create(beanDefine.getType());
+        ClassDefine classDefine = ClassDefine.create(beanDefine.getType());
         List<ValueInjector> valueFields = getValueInjectFields(environment, classDefine);
 
         Object bean = beanDefine.getBean();
